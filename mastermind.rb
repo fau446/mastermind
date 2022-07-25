@@ -7,23 +7,28 @@ module Mastermind
 
   class Game
     def initialize # computer player, human player
-      @board = Array.new(5) # Change name to @guess?
       @turns = 1
-      #@combination = Array.new(5) # could change size to 4
       @maker = Maker.new()  # computer player, human player
       @breaker = Breaker.new() # computer player, human player
     end
 
     def play
       # have maker create their combination
+      @maker.create_combination
       # breaker has 12 turns (while loop)
+      while @turns <= 12
         # breaker inputs combination
+        puts "Turn #{@turns}, please enter your guess: "
+        @breaker.input_guess
         # checks combination
         # if correct_guess?, break out of loop
+        @turns += 1
+      end
+
     end
 
     def correct_guess?
-      return true if @board == @maker.combination
+      return true if @breaker.guess == @maker.combination
       false
     end
   end
@@ -36,17 +41,37 @@ module Mastermind
     end
 
     def create_combination
-      (1..4).each do |n|
-        @combination[n] = COLORS.sample
-      end
+      (1..4).each { |n| @combination[n] = COLORS.sample }
     end
   end
 
   class Breaker
+    attr_reader :guess
+
+    def input_guess
+      # guess needs to have 4 items max and needs to match COLOR
+      loop do
+        @guess = gets.chomp.downcase.split
+        @guess.unshift(nil)
+        break if valid_guess?
+        puts "Invalid input, please try again."
+      end
+    end
+
+    private
+
+    def valid_guess?
+      # Array size needs to be exactly 5
+      return false unless @guess.length == 5
+      # each element has to be contained in COLORS
+      (1..4).each { |n| return false unless COLORS.include? @guess[n] }
+      true
+    end
   end
 end
 
 include Mastermind
 
-a = Maker.new
-a.create_combination
+b = Breaker.new
+b.input_guess
+p b.guess
