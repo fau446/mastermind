@@ -13,20 +13,25 @@ module Mastermind
     end
 
     def play
+      puts "Enter '1' to be the Breaker."
+      puts "Enter '2' to be the Maker."
+      player_role = ask_player_role
       # have maker create their combination
-      @maker.create_combination
+      @maker.combination = @maker.create_combination(player_role)
       p @maker.combination
       # breaker has 12 turns (while loop)
       while @turns <= 12
         # breaker inputs combination
-        puts "Turn #{@turns}, please enter your guess: "
-        @breaker.input_guess
+        puts "Turn #{@turns}:"
+        @breaker.guess = @breaker.input_guess
         # if correct_guess?, break out of loop
         break if correct_guess?
         # otherwise, new instance function to check
         give_hint
         @turns += 1
       end
+
+      puts "The combination was #{@maker.combination[1]} #{@maker.combination[2]} #{@maker.combination[3]} #{@maker.combination[4]}."
 
       if @turns <= 12
         puts "The Breaker wins!"
@@ -79,38 +84,57 @@ module Mastermind
       new_hash.delete(nil)
       new_hash
     end
+
+    def ask_player_role
+      loop do
+        player_role = gets.to_i
+        return player_role if player_role == 1 || player_role == 2
+        puts "Invalid input, enter '1' for breaker or '2' for maker."
+      end
+    end
   end
 
-  class Maker # currently the computer player randomly creates a combination
-    attr_reader :combination
+  class Player
+    def ask_for_input(input)
+      loop do
+        input = gets.chomp.downcase.split
+        input.unshift(nil)
+        return input if valid_input?(input)
+        puts "Invalid input, please try again."
+      end
+    end
+
+    def valid_input?(input)
+      return false unless input.length == 5
+      (1..4).each { |n| return false unless COLORS.include? input[n] }
+      true
+    end
+  end
+
+  class Maker < Player # currently the computer player randomly creates a combination
+    attr_accessor :combination
 
     def initialize
       @combination = Array.new(5)
     end
 
-    def create_combination
-      (1..4).each { |n| @combination[n] = COLORS.sample }
+    def create_combination(player_role)
+      if player_role == 1
+        combination = Array.new(5)
+        (1..4).each { |n| combination[n] = COLORS.sample }
+        combination
+      else
+        puts "Enter your combination:"
+        ask_for_input(@combination)
+      end
     end
   end
 
-  class Breaker
-    attr_reader :guess
+  class Breaker < Player
+    attr_accessor :guess
 
     def input_guess
-      loop do
-        @guess = gets.chomp.downcase.split
-        @guess.unshift(nil)
-        break if valid_guess?
-        puts "Invalid input, please try again."
-      end
-    end
-
-    private
-
-    def valid_guess?
-      return false unless @guess.length == 5
-      (1..4).each { |n| return false unless COLORS.include? @guess[n] }
-      true
+      ask_for_input(@guess)
     end
   end
 end
