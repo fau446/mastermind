@@ -18,12 +18,12 @@ module Mastermind
       player_role = ask_player_role
       # have maker create their combination
       @maker.combination = @maker.create_combination(player_role)
-      p @maker.combination
+      # p @maker.combination
       # breaker has 12 turns (while loop)
       while @turns <= 12
         # breaker inputs combination
         puts "Turn #{@turns}:"
-        @breaker.guess = @breaker.input_guess
+        @breaker.guess = @breaker.input_guess(player_role)
         # if correct_guess?, break out of loop
         break if correct_guess?
         # otherwise, new instance function to check
@@ -64,13 +64,13 @@ module Mastermind
           @correct_positions += 1
         end
       end
-      p guess_color_count
-      p combination_color_count
+      #p guess_color_count
+      #p combination_color_count
 
       guess_color_count.each do |k, v|
         unless combination_color_count[k] == 0 || guess_color_count[k] == 0
-          puts "guess color count: #{guess_color_count[k]}"
-          puts "key: #{k} value: #{v}"
+          #puts "guess color count: #{guess_color_count[k]}"
+          #puts "key: #{k} value: #{v}"
           @correct_colors += combination_color_count[k]
         end
       end
@@ -133,8 +133,20 @@ module Mastermind
   class Breaker < Player
     attr_accessor :guess
 
-    def input_guess
-      ask_for_input(@guess)
+    def input_guess(player_role)
+      if player_role == 1
+        ask_for_input(@guess)
+      else
+        # Make the computer randomly guess for now
+        computer_guess = Array.new(5)
+        computer_guess.unshift(nil)
+        (1..4).each do |n|
+          computer_guess[n] = COLORS.sample
+        end
+        sleep 1
+        puts "The computer guesses: #{computer_guess[1]} #{computer_guess[2]} #{computer_guess[3]} #{computer_guess[4]}"
+        computer_guess
+      end
     end
   end
 end
