@@ -16,14 +16,27 @@ module Mastermind
       puts "Enter '1' to be the Breaker."
       puts "Enter '2' to be the Maker."
       player_role = ask_player_role
+      if player_role == 2
+        puts "Choose the difficulty of the Breaker computer player:"
+        puts "Enter '1' for Easy."
+        puts "Enter '2' for Hard."
+        loop do
+          @difficulty = gets.chomp.to_i
+          break if @difficulty == 1 or @difficulty == 2
+          puts "Invalid input, enter '1' for easy or enter '2' for hard."
+        end
+      end
       # have maker create their combination
       @maker.combination = @maker.create_combination(player_role)
-      # p @maker.combination
+      if player_role == 2
+        @breaker.computer_combination = []
+        @breaker.computer_combination.replace(@maker.combination) 
+      end
       # breaker has 12 turns (while loop)
       while @turns <= 12
         # breaker inputs combination
         puts "Turn #{@turns}:"
-        @breaker.guess = @breaker.input_guess(player_role)
+        @breaker.guess = @breaker.input_guess(player_role, @difficulty)
         # if correct_guess?, break out of loop
         break if correct_guess?
         # otherwise, new instance function to check
@@ -31,6 +44,7 @@ module Mastermind
         @turns += 1
       end
 
+      #p @maker.combination
       puts "The combination was #{@maker.combination[1]} #{@maker.combination[2]} #{@maker.combination[3]} #{@maker.combination[4]}."
 
       if @turns <= 12
@@ -131,22 +145,47 @@ module Mastermind
   end
 
   class Breaker < Player
-    attr_accessor :guess
+    attr_accessor :guess, :computer_combination, :last_guess
 
-    def input_guess(player_role)
+    def initialize
+      @computer_combination
+      @last_guess = Array.new(5, nil)
+    end
+
+    def input_guess(player_role, difficulty=1)
       if player_role == 1
         ask_for_input(@guess)
       else
         # Make the computer randomly guess for now
-        computer_guess = Array.new(5)
-        computer_guess.unshift(nil)
-        (1..4).each do |n|
-          computer_guess[n] = COLORS.sample
+        if difficulty == 1
+          computer_guess = easy_difficulty
+        else
+          computer_guess = hard_difficulty(@last_guess)
+          @last_guess = computer_guess
         end
         sleep 1
         puts "The computer guesses: #{computer_guess[1]} #{computer_guess[2]} #{computer_guess[3]} #{computer_guess[4]}"
         computer_guess
       end
+    end
+
+    private
+
+    def easy_difficulty
+      temp = Array.new(5)
+      temp.unshift(nil)
+      (1..4).each { |n| temp[n] = COLORS.sample }
+      temp
+    end
+
+    def hard_difficulty(last_guess)
+      temp = []
+      temp.replace(@computer_combination)
+      (1..4).each do |n|
+        next if last_guess[n] == @computer_combination[n]
+        temp[n] = COLORS.sample
+      end
+      temp
     end
   end
 end
